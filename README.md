@@ -14,7 +14,9 @@
 
 `wechat-memo`（内部代号 `Wemo`）是一个跨平台、本机运行的微信到 Codex 网关。启动后会打开 Web 管理页；用户在页面扫码登录微信，即可从微信私聊控制本机 Codex、管理工作目录和切换会话。
 
-当前 `v0.1.0` 从上游 `XavierJiezou/codex-weixin v0.3.8` 的干净版本重新建立。当前版本是私人单租户基础版：**没有接入 Trading Project，也没有复制旧工作区中的 Route V3 实验代码或状态**。Memo Connector 和面向其他用户的多租户登录仍属于后续里程碑。
+在默认设置下，只发送图片、PDF、DOCX 或 XLSX 而不附文字时，Wemo 会把原文件直接保存到本机 Memo，并由 Memo 使用所选引擎分析和归类。以 `Memo：`、`存到 Memo：` 或 `发给 Memo：` 开头的附件说明也会走这条路径；其他带文字的附件请求仍交给 Codex。Memo 附件接口目前限制为最多 4 个文件、单个 8 MiB、合计 20 MiB。
+
+当前 `v0.1.0` 从上游 `XavierJiezou/codex-weixin v0.3.8` 的干净版本重新建立。当前版本是私人单租户基础版：**没有接入 Trading Project，也没有复制旧工作区中的 Route V3 实验代码或状态**。已接入本机 Memo 的 General Capture 附件入口；面向其他用户的多租户登录仍属于后续里程碑。
 
 ```text
 微信账号 <-> Wemo <-> 本机 Codex <-> 允许的工作目录
@@ -84,7 +86,7 @@ Web 端可以按微信账号查看 Markdown 历史、继续同一个 Codex threa
 
 ### 7. Web 全局设置与更新状态
 
-Web 端可以配置工作目录、Codex 后端、模型、推理强度和过程进度。上游保留了 npm 更新能力，但 Wemo 尚未发布 npm 包；首个源码版本请通过 Git 拉取更新并重新构建，不要依赖页面自动安装。
+Web 端可以配置工作目录、Codex 后端、模型、推理强度、过程进度，以及本机 Memo API、分析引擎和“无文字附件默认存入 Memo”开关。上游保留了 npm 更新能力，但 Wemo 尚未发布 npm 包；首个源码版本请通过 Git 拉取更新并重新构建，不要依赖页面自动安装。
 
 <p align="center">
   <img src="docs/images/screenshots/web-global-settings.png" alt="Wemo Web 全局设置" width="100%" />

@@ -483,6 +483,9 @@ function renderSettings() {
   document.querySelector("#backendInput").value = state.config.codexBackend || "auto";
   document.querySelector("#sandboxInput").value = state.config.codexExecSandbox || "";
   document.querySelector("#streamRepliesInput").checked = Boolean(state.config.streamReplies);
+  document.querySelector("#memoApiBaseInput").value = state.config.memoApiBase || "http://127.0.0.1:3000";
+  document.querySelector("#memoProviderInput").value = state.config.memoProvider || "codex";
+  document.querySelector("#defaultAttachmentsToMemoInput").checked = state.config.defaultAttachmentsToMemo !== false;
   renderModelOptions();
   document.querySelector("#effectiveModelValue").textContent = state.codexRuntime?.model || state.config.model || "Codex 默认";
   document.querySelector("#effectiveEffortValue").textContent = state.codexRuntime?.effort || state.config.effort || "Codex 默认";
@@ -1287,7 +1290,10 @@ async function saveSettings(event) {
         codexExecSandbox: document.querySelector("#sandboxInput").value || null,
         model: document.querySelector("#modelInput").value.trim(),
         effort: document.querySelector("#effortInput").value.trim(),
-        streamReplies: document.querySelector("#streamRepliesInput").checked
+        streamReplies: document.querySelector("#streamRepliesInput").checked,
+        memoApiBase: document.querySelector("#memoApiBaseInput").value.trim(),
+        memoProvider: document.querySelector("#memoProviderInput").value,
+        defaultAttachmentsToMemo: document.querySelector("#defaultAttachmentsToMemoInput").checked
       }
     });
     state.config = result.config;

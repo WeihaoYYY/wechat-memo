@@ -159,6 +159,30 @@
           </label>
         </div>
         <div class="settings-group">
+          <h2>Memo</h2>
+          <div class="field-grid">
+            <label>
+              <span>本机 Memo API</span>
+              <input id="memoApiBaseInput" name="memoApiBase" type="url" required>
+            </label>
+            <label>
+              <span>分析引擎</span>
+              <select id="memoProviderInput" name="memoProvider">
+                <option value="codex">本机 Codex</option>
+                <option value="openai">OpenAI API</option>
+                <option value="deepseek">DeepSeek API</option>
+              </select>
+            </label>
+            <label class="toggle-field" for="defaultAttachmentsToMemoInput">
+              <span>无文字附件默认存入 Memo</span>
+              <span class="toggle-control">
+                <input id="defaultAttachmentsToMemoInput" name="defaultAttachmentsToMemo" type="checkbox">
+                <span aria-hidden="true"></span>
+              </span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-group">
           <h2>Codex</h2>
           <div class="field-grid">
             <label>

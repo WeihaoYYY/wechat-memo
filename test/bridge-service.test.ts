@@ -55,6 +55,66 @@ test("labels WeChat voice transcriptions in the Codex prompt", async (t) => {
   assert.match(receivedPrompt, /\[WeChat voice transcription\]\n语音测试123/);
 });
 
+test("sends an attachment-only WeChat message directly to Memo by default", async (t) => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wemo-default-memo-"));
+  t.after(() => fs.rmSync(tmpDir, { recursive: true, force: true }));
+  const key = crypto.randomBytes(16);
+  const plaintext = Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    Buffer.from("memo image")
+  ]);
+  const ciphertext = encryptAesEcb(plaintext, key);
+  const aesKeyBase64 = Buffer.from(key.toString("hex"), "utf8").toString("base64");
+  const replies: string[] = [];
+  let codexRuns = 0;
+  let capturedText = "missing";
+  let capturedFilePath = "";
+  const service = new BridgeService({
+    config: {
+      ...defaultConfig(tmpDir),
+      allowedSenderIds: ["alice@im.wechat"]
+    },
+    stateStore: new RuntimeStateStore(resolveStatePaths(path.join(tmpDir, "state"))),
+    inboundDir: path.join(tmpDir, "inbound"),
+    mediaFetch: async () => new Response(new Uint8Array(ciphertext), { status: 200 }),
+    memoCapture: async (input) => {
+      capturedText = input.text;
+      capturedFilePath = input.files[0]?.path ?? "";
+      return { id: "capture-1", status: "ready", memoId: "memo-1", suggestedTitle: "测试图片" };
+    },
+    weixin: {
+      async sendTyping() {},
+      async sendText(input: { text: string }) {
+        replies.push(input.text);
+        return { messageId: "text-message" };
+      }
+    } as never,
+    runner: {
+      async run() {
+        codexRuns += 1;
+        return { raw: "", text: "unexpected" };
+      },
+      async stop() {}
+    } as never
+  });
+  const message = normalizeWeixinMessage({
+    message_id: "memo-image-1",
+    from_user_id: "alice@im.wechat",
+    item_list: [{
+      type: 2,
+      image_item: { media: { encrypt_query_param: "download-token", aes_key: aesKeyBase64 } }
+    }]
+  });
+
+  assert.ok(message);
+  await service.handleMessage(message);
+
+  assert.equal(capturedText, "");
+  assert.deepEqual(fs.readFileSync(capturedFilePath), plaintext);
+  assert.equal(codexRuns, 0);
+  assert.deepEqual(replies, ["已保存到 Memo：测试图片"]);
+});
+
 test("reports WeChat Codex turn status and resolves runtime details for status", async (t) => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-weixin-status-"));
   t.after(() => fs.rmSync(tmpDir, { recursive: true, force: true }));

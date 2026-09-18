@@ -12,6 +12,7 @@ import { WeixinApiClient, isStaleContextError, type FetchLike } from "../weixin/
 import { downloadInboundAttachments, InboundMediaTooLargeError, sendLocalMediaFile } from "../weixin/media.js";
 import type { NormalizedWeixinMessage } from "../weixin/messages.js";
 import type { PromptBufferItem } from "./prompt-buffer.js";
+import { captureMemo, type CaptureMemoInput, type MemoCaptureResult } from "../memo/client.js";
 
 export type BridgeServiceOptions = {
   config: CodexWeixinConfig;
@@ -22,6 +23,7 @@ export type BridgeServiceOptions = {
   inboundDir?: string;
   mediaFetch?: FetchLike;
   onTurnStatus?: (status: { senderId: string; sessionId: string; active: boolean }) => void;
+  memoCapture?: (input: CaptureMemoInput) => Promise<MemoCaptureResult>;
 };
 
 export class BridgeService {
@@ -102,6 +104,12 @@ export class BridgeService {
       return;
     }
 
+    const memoText = memoCaptureText(message, this.options.config.defaultAttachmentsToMemo);
+    if (memoText !== undefined && !this.buffers.isActive(message.senderId)) {
+      await this.captureAttachmentsInMemo(message, memoText);
+      return;
+    }
+
     const items = await this.promptItemsFromMessageWithNotice(message);
     if (!items) return;
 
@@ -153,6 +161,31 @@ export class BridgeService {
         return;
       default:
         await this.reply(message.senderId, `Unknown command: /${command.name}. Send /help.`);
+    }
+  }
+
+  private async captureAttachmentsInMemo(message: NormalizedWeixinMessage, text: string): Promise<void> {
+    const items = await this.promptItemsFromMessageWithNotice(message);
+    if (!items) return;
+    const files = items.flatMap((item) => item.kind === "text" ? [] : [{
+      path: item.path,
+      name: item.label ?? path.basename(item.path)
+    }]);
+    if (!files.length) {
+      await this.reply(message.senderId, "未保存到 Memo：附件下载失败或没有可保存的文件。");
+      return;
+    }
+    try {
+      const result = await (this.options.memoCapture ?? captureMemo)({
+        apiBase: this.options.config.memoApiBase,
+        provider: this.options.config.memoProvider,
+        messageId: message.id,
+        text,
+        files
+      });
+      await this.reply(message.senderId, memoCaptureReply(result, files.map((file) => file.name)));
+    } catch (error) {
+      await this.reply(message.senderId, `未保存到 Memo：${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -611,6 +644,28 @@ function parseCommand(text: string): { name: string; arg: string } | undefined {
   }
   const [name, ...rest] = trimmed.slice(1).split(/\s+/);
   return { name: name.toLowerCase(), arg: rest.join(" ") };
+}
+
+function memoCaptureText(message: NormalizedWeixinMessage, defaultAttachmentsToMemo: boolean): string | undefined {
+  if (!(message.attachments?.length)) return undefined;
+  const text = message.text.trim();
+  if (!text) return defaultAttachmentsToMemo ? "" : undefined;
+  const match = /^(?:(?:(?:发给|存到|保存到|放进|记到)\s*)|(?:(?:send to|save to)\s+))?(?:memo|备忘录)\s*[：:,，]?\s*(.*)$/i.exec(text);
+  return match ? match[1].trim() : undefined;
+}
+
+function memoCaptureReply(result: MemoCaptureResult, fileNames: string[]): string {
+  const name = result.suggestedTitle?.trim() || fileNames.join("、");
+  if (result.status === "ready" && result.memoId) {
+    return `已保存到 Memo：${name}`;
+  }
+  if (result.status === "pending") {
+    return `原文件已保存到 Memo，等待归类确认：${name}${result.question ? `\n${result.question}` : ""}`;
+  }
+  if (result.status === "needs_configuration") {
+    return `原文件已保存到 Memo，但自动分析尚未启用，请在 Memo 中手动归类：${name}`;
+  }
+  return `原文件已保存到 Memo，但自动分析失败，请在 Memo 中检查：${name}${result.errorMessage ? `\n${result.errorMessage}` : ""}`;
 }
 
 function helpText(): string {

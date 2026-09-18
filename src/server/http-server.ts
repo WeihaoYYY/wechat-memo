@@ -36,7 +36,10 @@ const configSchema = z.object({
   codexExecSandbox: z.enum(["read-only", "workspace-write", "danger-full-access"]).nullable().optional(),
   model: z.string().optional(),
   effort: z.string().optional(),
-  streamReplies: z.boolean().optional()
+  streamReplies: z.boolean().optional(),
+  memoApiBase: z.string().url().optional(),
+  memoProvider: z.enum(["codex", "openai", "deepseek"]).optional(),
+  defaultAttachmentsToMemo: z.boolean().optional()
 });
 const MAX_WEB_UPLOAD_FILES = 10;
 const MULTIPART_OVERHEAD_BYTES = 1024 * 1024;

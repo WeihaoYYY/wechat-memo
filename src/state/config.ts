@@ -21,6 +21,9 @@ export type CodexWeixinConfig = {
   maxBufferItems: number;
   promptBufferTtlMs: number;
   maxInboundBytes: number;
+  memoApiBase: string;
+  memoProvider: "codex" | "openai" | "deepseek";
+  defaultAttachmentsToMemo: boolean;
 };
 
 export function defaultConfig(cwd = path.join(os.homedir(), ".wemo", "workspace")): CodexWeixinConfig {
@@ -33,7 +36,10 @@ export function defaultConfig(cwd = path.join(os.homedir(), ".wemo", "workspace"
     streamReplies: true,
     maxBufferItems: 50,
     promptBufferTtlMs: 10 * 60_000,
-    maxInboundBytes: MAX_INBOUND_BYTES
+    maxInboundBytes: MAX_INBOUND_BYTES,
+    memoApiBase: "http://127.0.0.1:3000",
+    memoProvider: "codex",
+    defaultAttachmentsToMemo: true
   };
 }
 
@@ -46,6 +52,9 @@ export function loadConfig(paths: StatePaths, cwd?: string): CodexWeixinConfig {
     ...loaded,
     codexExecSandbox,
     streamReplies: typeof loaded.streamReplies === "boolean" ? loaded.streamReplies : base.streamReplies,
+    defaultAttachmentsToMemo: typeof loaded.defaultAttachmentsToMemo === "boolean"
+      ? loaded.defaultAttachmentsToMemo
+      : base.defaultAttachmentsToMemo,
     maxInboundBytes: normalizeInboundBytes(loaded.maxInboundBytes, base.maxInboundBytes),
     allowedSenderIds: loaded.allowedSenderIds ?? base.allowedSenderIds,
     allowedWorkspaces: (loaded.allowedWorkspaces?.length ? loaded.allowedWorkspaces : base.allowedWorkspaces)

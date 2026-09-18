@@ -13,6 +13,7 @@ All notable changes to `wechat-memo` are documented in this file. The `0.3.x` an
 
 ### Changed
 
+- Routed attachment-only WeChat images and supported documents directly into the local Memo General Capture API by default, with explicit `Memo:` captions and a Settings toggle.
 - Renamed the native outbound action block to `wemo-actions` while retaining parser compatibility with older action blocks.
 - Pointed update metadata and repository links at the standalone `wechat-memo` project.
 - Corrected simulated macOS PATH resolution so platform-specific tests do not use the host operating system's path separator.

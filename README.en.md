@@ -12,7 +12,9 @@
   <strong>Wemo: an isolated, extensible WeChat gateway for Codex and Memo.</strong>
 </p>
 
-`wechat-memo` (codename `Wemo`) is a cross-platform, local-only WeChat gateway for Codex and future Memo integration. Version `0.1.0` starts from the clean upstream `XavierJiezou/codex-weixin v0.3.8` source. It contains no Trading Project, Route V3, or state copied from the previous customized deployment. Memo integration and public multi-user authentication remain future milestones.
+`wechat-memo` (codename `Wemo`) is a cross-platform, local-only WeChat gateway for Codex and Memo. Version `0.1.0` starts from the clean upstream `XavierJiezou/codex-weixin v0.3.8` source. It contains no Trading Project, Route V3, or state copied from the previous customized deployment. Local Memo General Capture integration is included; public multi-user authentication remains a future milestone.
+
+By default, an image, PDF, DOCX, or XLSX sent without text is stored directly in the local Memo app for analysis and filing. Attachment captions beginning with `Memo:`, `Save to Memo:`, or `Send to Memo:` use the same route; other attachment instructions continue to Codex. Memo currently accepts up to four files, 8 MiB each and 20 MiB combined.
 
 ```text
 Multiple WeChat accounts <-> Wemo <-> local Codex <-> allowed workspaces

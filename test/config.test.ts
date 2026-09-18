@@ -12,6 +12,9 @@ test("uses ~/.wemo/workspace as the default Codex workspace", () => {
   assert.deepEqual(defaultConfig().allowedWorkspaces, [path.join(os.homedir(), ".wemo", "workspace")]);
   assert.equal(defaultConfig().streamReplies, true);
   assert.equal(defaultConfig().maxInboundBytes, 100 * 1024 * 1024);
+  assert.equal(defaultConfig().memoApiBase, "http://127.0.0.1:3000");
+  assert.equal(defaultConfig().memoProvider, "codex");
+  assert.equal(defaultConfig().defaultAttachmentsToMemo, true);
 });
 
 test("migrates the legacy inbound limit and never exceeds 100 MiB", (t) => {
