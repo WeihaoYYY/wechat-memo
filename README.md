@@ -1,7 +1,7 @@
-<h1 align="center">codex-weixin</h1>
+<h1 align="center">WeChat Memo</h1>
 
 <p align="center">
-  <img src="src/web/favicon.svg" alt="codex-weixin logo" width="128" height="128" />
+  <img src="src/web/favicon.svg" alt="Wemo logo" width="128" height="128" />
 </p>
 
 <p align="center">
@@ -9,16 +9,28 @@
 </p>
 
 <p align="center">
-  <strong>把个人微信账号接入本机 OpenAI Codex。</strong>
+  <strong>Wemo：独立、可扩展的微信到 Codex 与 Memo 网关。</strong>
 </p>
 
-`codex-weixin` 是一个跨平台、本机运行的微信到 Codex 专用服务。启动后会打开 Web 管理页；用户在页面扫码登录微信，即可从微信私聊控制本机 Codex、管理工作目录和切换会话。
+`wechat-memo`（内部代号 `Wemo`）是一个跨平台、本机运行的微信到 Codex 网关。启动后会打开 Web 管理页；用户在页面扫码登录微信，即可从微信私聊控制本机 Codex、管理工作目录和切换会话。
+
+当前 `v0.1.0` 从上游 `XavierJiezou/codex-weixin v0.3.8` 的干净版本重新建立。当前版本是私人单租户基础版：**没有接入 Trading Project，也没有复制旧工作区中的 Route V3 实验代码或状态**。Memo Connector 和面向其他用户的多租户登录仍属于后续里程碑。
 
 ```text
-微信账号 <-> codex-weixin <-> 本机 Codex <-> 允许的工作目录
+微信账号 <-> Wemo <-> 本机 Codex <-> 允许的工作目录
 ```
 
-它不是通用消息网关，不接入其他聊天平台，也不把管理页面开放到局域网或公网。
+它不是通用消息网关，不接入其他聊天平台，也不把管理页面开放到局域网或公网。当前版不能作为公共 SaaS 使用。
+
+## 产品边界
+
+- `Wemo Core` 负责微信收发、附件、会话、授权和通用任务状态。
+- 私人版可以在明确授权的工作区内使用个人 Codex。
+- 未来的 Memo 公共版必须让每位用户登录自己的账号、绑定自己的微信，并隔离凭证、数据、附件、会话和通知队列。
+- Trading 未来只能作为可选私有 Connector 接入；Trading 停止时不能影响普通微信和 Memo。
+- 在 Connector 完成并通过独立验收前，Wemo 不依赖任何 Trading 服务启动。
+
+详细设计见 [产品架构与隔离边界](./docs/ARCHITECTURE.md)。
 
 ## 核心功能
 
@@ -59,7 +71,7 @@
 一个服务可以并行运行多个微信账号。每个账号拥有独立的联系人授权、附件、会话和运行状态；移除账号时还可以选择保留历史，重新扫码后继续使用。
 
 <p align="center">
-  <img src="docs/images/screenshots/web-multi-account.png" alt="codex-weixin 多微信账号管理" width="100%" />
+  <img src="docs/images/screenshots/web-multi-account.png" alt="Wemo 多微信账号管理" width="100%" />
 </p>
 
 ### 6. Web 会话管理
@@ -67,15 +79,15 @@
 Web 端可以按微信账号查看 Markdown 历史、继续同一个 Codex thread，并支持新建、重命名、切换、重置和删除会话。页面也支持直接发送文本和附件，每次最多 10 个文件、合计 100 MiB。
 
 <p align="center">
-  <img src="docs/images/screenshots/web-session-management.png" alt="codex-weixin Web 会话管理" width="100%" />
+  <img src="docs/images/screenshots/web-session-management.png" alt="Wemo Web 会话管理" width="100%" />
 </p>
 
-### 7. Web 全局设置与自动更新
+### 7. Web 全局设置与更新状态
 
-Web 端可以配置工作目录、Codex 后端、模型、推理强度和过程进度，也可以检查并安装新版本。全局 npm 安装会更新当前实际运行的 runtime，完成校验后自动重启并恢复连接。
+Web 端可以配置工作目录、Codex 后端、模型、推理强度和过程进度。上游保留了 npm 更新能力，但 Wemo 尚未发布 npm 包；首个源码版本请通过 Git 拉取更新并重新构建，不要依赖页面自动安装。
 
 <p align="center">
-  <img src="docs/images/screenshots/web-global-settings.png" alt="codex-weixin Web 全局设置" width="100%" />
+  <img src="docs/images/screenshots/web-global-settings.png" alt="Wemo Web 全局设置" width="100%" />
 </p>
 
 ## 环境要求
@@ -92,24 +104,18 @@ codex
 
 ## 安装
 
-推荐从 npm 全局安装：
+首个 Wemo 版本只支持从源码安装：
 
 ```bash
-npm install -g codex-weixin
-codex-weixin
-```
-
-也可以从源码安装：
-
-```bash
-git clone https://github.com/XavierJiezou/codex-weixin.git
-cd codex-weixin
+git clone https://github.com/WeihaoYYY/wechat-memo.git
+cd wechat-memo
 npm install
 npm run build
 npm install -g .
+wemo
 ```
 
-服务会自动打开 [http://127.0.0.1:8787](http://127.0.0.1:8787)。如果不希望全局安装，也可以在项目目录运行：
+服务会自动打开 [http://127.0.0.1:18788](http://127.0.0.1:18788)。如果不希望全局安装，也可以在项目目录运行：
 
 ```bash
 npm start
@@ -129,7 +135,7 @@ npm start
 
 “会话”页面只管理由本服务创建和使用的 Codex 会话，不扫描或接管其他终端产生的全部 Codex 历史记录。
 
-选择一个会话后，右侧会从 Codex 自身保存的 thread 中读取历史用户消息和最终回复。聊天标题下方可以为当前会话选择模型、推理强度和过程进度，或继续继承全局设置；这与微信 `/model`、`/effort`、`/stream` 共用同一份会话配置。过程进度默认开启，在 Web 中折叠展示并记录处理用时，最终答案仍作为一个完整回复显示。可以直接在页面底部继续聊天，并通过回形针按钮将文本提示词和多个文件作为同一个 turn 发送；Web 和微信共用同一个 thread，上下文会保持连续。上传文件按微信账号和会话隔离保存在 `~/.codex-weixin/inbound/`，每次最多 10 个、合计不超过 100 MiB。
+选择一个会话后，右侧会从 Codex 自身保存的 thread 中读取历史用户消息和最终回复。聊天标题下方可以为当前会话选择模型、推理强度和过程进度，或继续继承全局设置；这与微信 `/model`、`/effort`、`/stream` 共用同一份会话配置。过程进度默认开启，在 Web 中折叠展示并记录处理用时，最终答案仍作为一个完整回复显示。可以直接在页面底部继续聊天，并通过回形针按钮将文本提示词和多个文件作为同一个 turn 发送；Web 和微信共用同一个 thread，上下文会保持连续。上传文件按微信账号和会话隔离保存在 `~/.wemo/inbound/`，每次最多 10 个、合计不超过 100 MiB。
 
 页面默认使用账号备注，不把内部 ID 当作账号名称。展开账号卡片中的“账号 ID”可以查看 iLink Bot ID 和 User ID；Codex thread id 仍不在普通页面显示。可以在“微信账号”页面给账号设置只保存在本机的备注；备注会同步用于会话标签。未设置备注时才使用“微信账号 1”这类默认名称。当前扫码和消息接口没有提供微信昵称、头像或个人资料查询能力，因此页面使用默认图标。
 
@@ -167,7 +173,7 @@ npm start
 Codex 可以在最终回复中声明需要发送的本机文件：
 
 ````text
-```codex-weixin-actions
+```wemo-actions
 {
   "send": [
     { "type": "image", "path": "/absolute/path/chart.png" },
@@ -199,7 +205,7 @@ IkunCoding 提供方会额外显示 `gpt-5.6-sol`、`gpt-5.6-terra` 和 `gpt-5.6
 服务状态和默认 Codex 工作目录统一放在：
 
 ```text
-~/.codex-weixin/
+~/.wemo/
   accounts/                 微信账号凭据，每个账号一个文件
   retained-accounts.json    已移除账号的恢复索引，不包含 token
   runtime/<account-id>/     联系人授权和受管会话状态
@@ -215,16 +221,16 @@ IkunCoding 提供方会额外显示 `gpt-5.6-sol`、`gpt-5.6-terra` 和 `gpt-5.6
 服务始终只绑定 `127.0.0.1`。可以通过环境变量改变端口、状态目录或关闭自动打开浏览器：
 
 ```text
-CODEX_WEIXIN_PORT=8787
-CODEX_WEIXIN_STATE_DIR=/absolute/private/path
-CODEX_WEIXIN_OPEN=0
+WEMO_PORT=18788
+WEMO_STATE_DIR=/absolute/private/path
+WEMO_OPEN=0
 ```
 
 Windows PowerShell 示例：
 
 ```powershell
-$env:CODEX_WEIXIN_OPEN="0"
-codex-weixin
+$env:WEMO_OPEN="0"
+wemo
 ```
 
 ## 安全边界
@@ -249,7 +255,11 @@ npm run build
 
 开发入口同样只启动本机 Web 服务。浏览器页面、JSON API、多账号运行时、扫码状态机和受管会话都有自动化测试。
 
-源码目录通过 `npm run dev` 或 `npm start` 启动时，Web 只检查新版本，不会自动安装；请通过 Git 更新源码后重新构建。全局安装和独立 `node_modules/codex-weixin` runtime 会更新当前实际运行的 npm prefix，并在重启前验证目标版本和服务入口。Windows 更新前会自动释放服务进程对包目录的工作目录占用，避免 npm 因 `EBUSY` 无法替换文件。
+源码目录通过 `npm run dev` 或 `npm start` 启动时，请通过 Git 更新源码后重新构建。Wemo 尚未发布 npm 自动更新通道；在正式发布前不要依赖管理页面安装更新。
+
+## 上游与许可证
+
+Wemo 基于 MIT 许可的 [`XavierJiezou/codex-weixin`](https://github.com/XavierJiezou/codex-weixin) `v0.3.8`（`769f4a1`）建立，保留原始提交历史、MIT 许可证和版权声明。Wemo 的新增修改同样按仓库中的 MIT 许可证发布。
 
 ## 参考与许可
 

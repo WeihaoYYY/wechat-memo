@@ -4,7 +4,7 @@ import path from "node:path";
 import { normalizeAccountId } from "../weixin/accounts.js";
 
 export function defaultStateDir(): string {
-  return path.join(os.homedir(), ".codex-weixin");
+  return path.join(os.homedir(), ".wemo");
 }
 
 export type StatePaths = {

@@ -328,7 +328,7 @@ export class BridgeService {
     }
     try {
       const downloaded = await downloadInboundAttachments({
-        rootDir: this.options.inboundDir ?? path.join(this.options.config.defaultCwd, ".codex-weixin-inbound"),
+        rootDir: this.options.inboundDir ?? path.join(this.options.config.defaultCwd, ".wemo-inbound"),
         senderId: message.senderId,
         messageId: message.id,
         attachments,
@@ -376,7 +376,7 @@ export class BridgeService {
     this.options.onTurnStatus?.({ senderId: message.senderId, sessionId: session.id, active: true });
     try {
       await this.withTyping(message.senderId, async () => {
-        console.log(`[codex-weixin] starting Codex turn for ${message.senderId} in ${workspace}`);
+        console.log(`[wemo] starting Codex turn for ${message.senderId} in ${workspace}`);
         const result = await this.runner.run({
           prompt: buildPrompt(text, attachments),
           cwd: workspace,
@@ -392,7 +392,7 @@ export class BridgeService {
             }
           } : {})
         });
-        console.log(`[codex-weixin] Codex turn completed for ${message.senderId}; text=${result.text.length} chars`);
+        console.log(`[wemo] Codex turn completed for ${message.senderId}; text=${result.text.length} chars`);
         if (result.threadId) {
           this.options.stateStore.setThread(message.senderId, result.threadId);
         }
@@ -422,7 +422,7 @@ export class BridgeService {
         kind: action.type
       });
     } catch (error) {
-      await this.reply(senderId, `[codex-weixin] Failed to send ${action.type}: ${error instanceof Error ? error.message : String(error)}`);
+      await this.reply(senderId, `[wemo] Failed to send ${action.type}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -456,7 +456,7 @@ export class BridgeService {
     const workspace = session?.workspace ?? this.options.config.defaultCwd;
     const runtime = await this.effectiveRuntime(senderId);
     return [
-      "codex-weixin status",
+      "Wemo status",
       `sender: ${senderId}`,
       `session: ${session?.title ?? "(new)"}`,
       `workspace: ${workspace}`,
@@ -497,9 +497,9 @@ export class BridgeService {
   private async reply(senderId: string, text: string): Promise<void> {
     const contextToken = this.options.stateStore.getContextToken(senderId);
     try {
-      console.log(`[codex-weixin] sending reply to ${senderId}; text=${text.length} chars`);
+      console.log(`[wemo] sending reply to ${senderId}; text=${text.length} chars`);
       await this.options.weixin.sendText({ toUserId: senderId, text, contextToken });
-      console.log(`[codex-weixin] sent reply to ${senderId}`);
+      console.log(`[wemo] sent reply to ${senderId}`);
     } catch (error) {
       if (isStaleContextError(error)) {
         console.warn(`WeChat context token is stale for ${senderId}; ask user to send a fresh message.`);
@@ -535,7 +535,7 @@ function parseCommand(text: string): { name: string; arg: string } | undefined {
 
 function helpText(): string {
   return [
-    "codex-weixin commands:",
+    "Wemo commands:",
     "/help - show commands",
     "/status - show current binding",
     "/bind <absolute-path> - bind this chat to a workspace",

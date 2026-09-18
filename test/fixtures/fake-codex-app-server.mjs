@@ -40,8 +40,8 @@ rl.on("line", (line) => {
       fail(message.id, "jsonrpc header must be omitted");
       return;
     }
-    if (message.params?.clientInfo?.name !== "codex-weixin") {
-      fail(message.id, "missing codex-weixin clientInfo");
+    if (message.params?.clientInfo?.name !== "wemo") {
+      fail(message.id, "missing wemo clientInfo");
       return;
     }
     respond(message.id, {

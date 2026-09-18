@@ -284,9 +284,9 @@ export class AppServerCodexRunner {
     try {
       await this.request("initialize", {
         clientInfo: {
-          name: "codex-weixin",
-          title: "Codex Weixin",
-          version: "0.2.0"
+          name: "wemo",
+          title: "Wemo · WeChat Memo",
+          version: "0.1.0"
         },
         capabilities: {
           experimentalApi: false,
@@ -550,7 +550,7 @@ export class AppServerCodexRunner {
         this.send({
           id,
           result: {
-            contentItems: [{ type: "inputText", text: "Dynamic tools are not available in codex-weixin." }],
+            contentItems: [{ type: "inputText", text: "Dynamic tools are not available in Wemo." }],
             success: false
           }
         });

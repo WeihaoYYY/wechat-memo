@@ -1,27 +1,30 @@
 {
-  "name": "codex-weixin",
-  "version": "0.3.8",
-  "description": "Local multi-account WeChat server for OpenAI Codex.",
+  "name": "wechat-memo",
+  "version": "0.1.0",
+  "description": "Wemo: an isolated WeChat gateway for personal Codex and future Memo integration.",
   "license": "MIT",
-  "author": "Xuechao Zou",
-  "homepage": "https://github.com/XavierJiezou/codex-weixin#readme",
+  "author": "WeihaoYYY and contributors",
+  "homepage": "https://github.com/WeihaoYYY/wechat-memo#readme",
   "bugs": {
-    "url": "https://github.com/XavierJiezou/codex-weixin/issues"
+    "url": "https://github.com/WeihaoYYY/wechat-memo/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/XavierJiezou/codex-weixin.git"
+    "url": "git+https://github.com/WeihaoYYY/wechat-memo.git"
   },
   "keywords": [
     "codex",
     "wechat",
     "weixin",
+    "wemo",
+    "memo",
     "openai",
     "bridge"
   ],
   "type": "module",
   "bin": {
-    "codex-weixin": "dist/server/index.js"
+    "wemo": "dist/server/index.js",
+    "wechat-memo": "dist/server/index.js"
   },
   "files": [
     "dist/",

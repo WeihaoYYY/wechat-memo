@@ -1,4 +1,10 @@
-codex-weixin is a clean-room independent WeChat bridge for OpenAI Codex.
+Wemo (wechat-memo) is derived from the MIT-licensed codex-weixin project by
+Xuechao Zou (https://github.com/XavierJiezou/codex-weixin). The upstream base
+for the initial Wemo release is v0.3.8, commit 769f4a1.
+
+Wemo modifications Copyright (c) 2026 Weihao.
+
+The original project is a clean-room independent WeChat bridge for OpenAI Codex.
 
 The project structure and protocol boundaries were informed by the MIT-licensed
 Tencent/openclaw-weixin package and by public documentation in the WeChat/Codex

@@ -40,15 +40,15 @@ export function acquireServiceProcessLock(stateRoot: string): ServiceProcessLock
       }
       const existing = readLockRecord(lockPath);
       if (!existing) {
-        throw new Error(`codex-weixin lock is unreadable: ${lockPath}`);
+        throw new Error(`Wemo lock is unreadable: ${lockPath}`);
       }
       if (isProcessRunning(existing.pid)) {
-        throw new Error(`codex-weixin is already running for ${stateRoot} (PID ${existing.pid})`);
+        throw new Error(`Wemo is already running for ${stateRoot} (PID ${existing.pid})`);
       }
       fs.rmSync(lockPath, { force: true });
     }
   }
-  throw new Error(`Unable to acquire codex-weixin lock: ${lockPath}`);
+  throw new Error(`Unable to acquire Wemo lock: ${lockPath}`);
 }
 
 function readLockRecord(lockPath: string): LockRecord | undefined {

@@ -3,13 +3,15 @@ import type { PromptBufferItem } from "./prompt-buffer.js";
 const BRIDGE_ACTION_INSTRUCTIONS = [
   "WeChat bridge rule: when you need to send a local image, video, or file to the user, do not use Markdown local file links.",
   "When a WeChat attachment line includes a local path, inspect the saved local attachment with available tools before answering.",
-  "Use a fenced codex-weixin-actions JSON block instead, for example:",
-  "```codex-weixin-actions",
+  "Use a fenced wemo-actions JSON block instead, for example:",
+  "```wemo-actions",
   "{\"send\":[{\"type\":\"image\",\"path\":\"C:/absolute/path/image.png\"},{\"type\":\"video\",\"path\":\"C:/absolute/path/video.mp4\"}]}",
   "```"
 ].join("\n");
-const LEGACY_BRIDGE_ACTION_INSTRUCTIONS = BRIDGE_ACTION_INSTRUCTIONS
-  .replaceAll("codex-weixin-actions", "codex-weixin-server-actions");
+const LEGACY_BRIDGE_ACTION_INSTRUCTIONS = [
+  BRIDGE_ACTION_INSTRUCTIONS.replaceAll("wemo-actions", "codex-weixin-actions"),
+  BRIDGE_ACTION_INSTRUCTIONS.replaceAll("wemo-actions", "codex-weixin-server-actions")
+];
 
 export function buildPrompt(
   text: string,
@@ -59,7 +61,7 @@ export function buildPromptPreview(text: string, attachments: PromptPreviewItem[
 
 export function parsePrompt(text: string): { text: string; attachments: PromptAttachment[] } {
   let normalized = text.trim();
-  for (const instructions of [BRIDGE_ACTION_INSTRUCTIONS, LEGACY_BRIDGE_ACTION_INSTRUCTIONS]) {
+  for (const instructions of [BRIDGE_ACTION_INSTRUCTIONS, ...LEGACY_BRIDGE_ACTION_INSTRUCTIONS]) {
     if (normalized.startsWith(instructions)) {
       normalized = normalized.slice(instructions.length).trim();
       break;

@@ -7,9 +7,9 @@ import test from "node:test";
 import { defaultConfig, loadConfig, MAX_INBOUND_BYTES, saveConfig } from "../src/state/config.js";
 import { resolveStatePaths } from "../src/state/paths.js";
 
-test("uses ~/.codex-weixin as the default Codex workspace", () => {
-  assert.equal(defaultConfig().defaultCwd, path.join(os.homedir(), ".codex-weixin"));
-  assert.deepEqual(defaultConfig().allowedWorkspaces, [path.join(os.homedir(), ".codex-weixin")]);
+test("uses ~/.wemo/workspace as the default Codex workspace", () => {
+  assert.equal(defaultConfig().defaultCwd, path.join(os.homedir(), ".wemo", "workspace"));
+  assert.deepEqual(defaultConfig().allowedWorkspaces, [path.join(os.homedir(), ".wemo", "workspace")]);
   assert.equal(defaultConfig().streamReplies, true);
   assert.equal(defaultConfig().maxInboundBytes, 100 * 1024 * 1024);
 });

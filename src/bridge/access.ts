@@ -27,7 +27,7 @@ export class AccessController {
 
     return {
       allowed: false,
-      message: `Access denied. Open the codex-weixin management page and allow sender: ${senderId}`
+      message: `Access denied. Open the Wemo management page and allow sender: ${senderId}`
     };
   }
 

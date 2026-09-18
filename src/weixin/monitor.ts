@@ -49,40 +49,40 @@ export async function monitorWeixin(options: MonitorOptions): Promise<void> {
       }
     } catch (error) {
       const retryMs = retryBackoff.next();
-      console.error(`[codex-weixin] monitor poll failed; retrying in ${retryMs}ms: ${errorDetail(error)}`);
+      console.error(`[wemo] monitor poll failed; retrying in ${retryMs}ms: ${errorDetail(error)}`);
       await delay(retryMs, options.signal);
       continue;
     }
     retryBackoff.reset();
     const { messages } = batch;
     if (messages.length) {
-      console.log(`[codex-weixin] received ${messages.length} update(s)`);
+      console.log(`[wemo] received ${messages.length} update(s)`);
     }
     for (const raw of messages) {
       let normalized: NormalizedWeixinMessage | undefined;
       try {
         normalized = normalizeWeixinMessage(raw);
       } catch (error) {
-        console.error(`[codex-weixin] failed to normalize message: ${errorDetail(error)}`);
+        console.error(`[wemo] failed to normalize message: ${errorDetail(error)}`);
         continue;
       }
       if (!normalized) {
         continue;
       }
       if (options.claimMessage && !options.claimMessage(normalized)) {
-        console.log(`[codex-weixin] skipped duplicate message ${normalized.id} from ${normalized.senderId}`);
+        console.log(`[wemo] skipped duplicate message ${normalized.id} from ${normalized.senderId}`);
         continue;
       }
       try {
-        console.log(`[codex-weixin] handling message ${normalized.id} from ${normalized.senderId}`);
+        console.log(`[wemo] handling message ${normalized.id} from ${normalized.senderId}`);
         await options.onMessage(normalized);
-        console.log(`[codex-weixin] handled message ${normalized.id} from ${normalized.senderId}`);
+        console.log(`[wemo] handled message ${normalized.id} from ${normalized.senderId}`);
       } catch (error) {
-        console.error(`[codex-weixin] message handling failed for ${normalized.senderId}: ${errorDetail(error)}`);
+        console.error(`[wemo] message handling failed for ${normalized.senderId}: ${errorDetail(error)}`);
         try {
           await options.onMessageError?.(error, normalized);
         } catch (reportError) {
-          console.error(`[codex-weixin] failed to report message error for ${normalized.senderId}: ${errorDetail(reportError)}`);
+          console.error(`[wemo] failed to report message error for ${normalized.senderId}: ${errorDetail(reportError)}`);
         }
       }
     }

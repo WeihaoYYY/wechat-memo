@@ -23,7 +23,7 @@ const state = {
 
 const MAX_CHAT_FILES = 10;
 const MAX_CHAT_FILE_BYTES = 100 * 1024 * 1024;
-const DISMISSED_UPDATE_KEY = "codex-weixin.dismissed-update";
+const DISMISSED_UPDATE_KEY = "wemo.dismissed-update";
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const UPDATE_RECONNECT_TIMEOUT_MS = 90 * 1000;
 let streamingRenderFrame = 0;
@@ -130,7 +130,7 @@ async function bootstrap() {
     window.setInterval(() => void checkForUpdate(), UPDATE_CHECK_INTERVAL_MS);
   } catch (error) {
     toast(error.message, true);
-    els.accountsList.innerHTML = emptyState("server-off", "无法连接本机服务", "请重新启动 codex-weixin");
+    els.accountsList.innerHTML = emptyState("server-off", "无法连接本机服务", "请重新启动 Wemo");
   }
 }
 
@@ -214,7 +214,7 @@ async function installUpdate() {
     state.updateInfo = { ...state.updateInfo, latestVersion: targetVersion, registry: result.registry };
     els.updateLatestVersion.textContent = `v${String(targetVersion).replace(/^v/i, "")}`;
     if (!result.restarting) {
-      throw new Error("更新已安装，但自动重启未启动，请手动重启 codex-weixin");
+      throw new Error("更新已安装，但自动重启未启动，请手动重启 Wemo");
     }
     setUpdateProgress(
       "正在重启服务",
@@ -253,7 +253,7 @@ async function waitForUpdatedService(targetVersion, previousToken) {
     }
     await delay(900);
   }
-  throw new Error("新版本已安装，但服务未能自动恢复，请手动重启 codex-weixin");
+  throw new Error("新版本已安装，但服务未能自动恢复，请手动重启 Wemo");
 }
 
 function resetUpdateDialog() {
@@ -1320,7 +1320,7 @@ function closeDialog(id) {
 async function api(url, options = {}) {
   const isFormData = options.body instanceof FormData;
   const headers = { ...(options.body && !isFormData ? { "Content-Type": "application/json" } : {}) };
-  if (options.token !== false && state.requestToken) headers["X-Codex-Weixin-Token"] = state.requestToken;
+  if (options.token !== false && state.requestToken) headers["X-Wemo-Token"] = state.requestToken;
   const response = await fetch(url, {
     method: options.method || "GET",
     headers,
@@ -1333,7 +1333,7 @@ async function api(url, options = {}) {
 
 async function streamApi(url, options, onEvent) {
   const headers = {};
-  if (state.requestToken) headers["X-Codex-Weixin-Token"] = state.requestToken;
+  if (state.requestToken) headers["X-Wemo-Token"] = state.requestToken;
   const response = await fetch(url, {
     method: options.method || "POST",
     headers,

@@ -166,7 +166,7 @@ export function publicAccount(account: WeixinAccount): PublicWeixinAccount {
 export function loadAccount(paths: StatePaths, accountId?: string): WeixinAccount {
   const accounts = listAccounts(paths);
   if (accounts.length === 0) {
-    throw new Error("No WeChat account found. Open codex-weixin and add an account.");
+    throw new Error("No WeChat account found. Open Wemo and add an account.");
   }
   if (!accountId) {
     if (accounts.length > 1) {

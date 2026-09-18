@@ -1,7 +1,7 @@
-<h1 align="center">codex-weixin</h1>
+<h1 align="center">WeChat Memo</h1>
 
 <p align="center">
-  <img src="src/web/favicon.svg" alt="codex-weixin logo" width="128" height="128" />
+  <img src="src/web/favicon.svg" alt="Wemo logo" width="128" height="128" />
 </p>
 
 <p align="center">
@@ -9,16 +9,25 @@
 </p>
 
 <p align="center">
-  <strong>Connect multiple personal WeChat accounts to a local OpenAI Codex installation.</strong>
+  <strong>Wemo: an isolated, extensible WeChat gateway for Codex and Memo.</strong>
 </p>
 
-`codex-weixin` is a cross-platform, local-only WeChat service dedicated to Codex. Starting it opens a Web management page where users scan a WeChat QR code, manage accounts and workspaces, and switch Codex sessions.
+`wechat-memo` (codename `Wemo`) is a cross-platform, local-only WeChat gateway for Codex and future Memo integration. Version `0.1.0` starts from the clean upstream `XavierJiezou/codex-weixin v0.3.8` source. It contains no Trading Project, Route V3, or state copied from the previous customized deployment. Memo integration and public multi-user authentication remain future milestones.
 
 ```text
-Multiple WeChat accounts <-> codex-weixin <-> local Codex <-> allowed workspaces
+Multiple WeChat accounts <-> Wemo <-> local Codex <-> allowed workspaces
 ```
 
-It is not a general messaging gateway. The management page is never exposed to the LAN or public Internet.
+It is not a general messaging gateway. The management page is never exposed to the LAN or public Internet, and this initial release is not a public SaaS.
+
+## Product boundaries
+
+- Wemo Core owns WeChat transport, attachments, sessions, authorization, and generic task state.
+- The private deployment may use personal Codex inside explicitly allowed workspaces.
+- A future public Memo deployment must give every user their own login and WeChat connection, with tenant-isolated credentials, data, attachments, sessions, and notification queues.
+- Trading may be added only as an optional private connector. It must never become a required Wemo startup dependency.
+
+See [Architecture and isolation boundaries](./docs/ARCHITECTURE.md).
 
 ## Feature status
 
@@ -38,12 +47,12 @@ Screenshots live under `docs/images/screenshots/`. The Web management screenshot
 | ✅ | Process progress | Enabled by default; Codex progress reaches WeChat immediately and appears in a collapsible Web timeline with elapsed time, while final answers stay intact. | Pending: `docs/images/screenshots/web-process-progress.png` |
 | ✅ | Typing state and deduplication | Web typing state plus persistent sync cursors and message IDs prevent duplicate replies. | Pending: `docs/images/screenshots/wechat-typing.png` |
 | ✅ | App-server first | New and resumed sessions prefer Codex app-server V2 and fall back to `codex exec` when unavailable. | Pending: `docs/images/screenshots/wechat-status.png` |
-| ✅ | Web auto-update | Selects npm or npmmirror, updates the active npm runtime, verifies it, then restarts and reconnects. | Pending: `docs/images/screenshots/web-auto-update.png` |
+| 🟡 | Web update channel | The inherited updater targets `wechat-memo`, but no Wemo npm package has been published yet. Update this source release with Git and rebuild. | Pending: `docs/images/screenshots/web-auto-update.png` |
 
 ## Web management preview
 
 <p align="center">
-  <img src="docs/images/screenshots/web-session-management.png" alt="codex-weixin Web session management" width="100%" />
+  <img src="docs/images/screenshots/web-session-management.png" alt="Wemo Web session management" width="100%" />
 </p>
 
 ## Requirements
@@ -60,25 +69,18 @@ codex
 
 ## Install and start
 
-Install globally from npm:
+The first Wemo release is installed from source:
 
 ```bash
-npm install -g codex-weixin
-codex-weixin
-```
-
-Or install from source:
-
-```bash
-git clone https://github.com/XavierJiezou/codex-weixin.git
-cd codex-weixin
+git clone https://github.com/WeihaoYYY/wechat-memo.git
+cd wechat-memo
 npm install
 npm run build
 npm install -g .
-codex-weixin
+wemo
 ```
 
-The service opens [http://127.0.0.1:8787](http://127.0.0.1:8787). To run without a global install:
+The service opens [http://127.0.0.1:18788](http://127.0.0.1:18788). To run without a global install:
 
 ```bash
 npm start
@@ -98,7 +100,7 @@ Repeat the QR flow to add more accounts. Every account has its own monitor, send
 
 The Sessions page manages conversations created and used by this server. It does not scan or take ownership of every Codex conversation created in other terminals.
 
-Selecting a session reads its user messages and final replies from Codex's own persisted thread. The controls below the chat title select a model, reasoning effort, and process-progress behavior for the current session or keep inheriting global settings; they share the same session configuration used by the WeChat `/model`, `/effort`, and `/stream` commands. Process progress is enabled by default, appears in a collapsible Web timeline with elapsed time, and leaves the final answer as one stable response. The Web composer can submit text and multiple files as one turn and continues that same thread, so context remains shared with later WeChat messages. Uploads are isolated by account and session under `~/.codex-weixin/inbound/`, with at most 10 files and 100 MiB total per turn.
+Selecting a session reads its user messages and final replies from Codex's own persisted thread. The controls below the chat title select a model, reasoning effort, and process-progress behavior for the current session or keep inheriting global settings; they share the same session configuration used by the WeChat `/model`, `/effort`, and `/stream` commands. Process progress is enabled by default, appears in a collapsible Web timeline with elapsed time, and leaves the final answer as one stable response. The Web composer can submit text and multiple files as one turn and continues that same thread, so context remains shared with later WeChat messages. Uploads are isolated by account and session under `~/.wemo/inbound/`, with at most 10 files and 100 MiB total per turn.
 
 The UI uses local remarks instead of treating internal IDs as account names. Expand “Account IDs” on an account card to inspect its iLink Bot ID and User ID; Codex thread IDs remain hidden from the regular UI. Each account can have a local remark edited from the WeChat Accounts page; the remark is reused by session tabs, with `WeChat Account 1` used only as a fallback. The current QR and messaging APIs do not expose WeChat nicknames, avatars, or a profile lookup endpoint, so the page uses a default icon.
 
@@ -136,7 +138,7 @@ Regular messages enter the active session. Images, files, videos, and voice/audi
 Codex can request local-file delivery in its final response:
 
 ````text
-```codex-weixin-actions
+```wemo-actions
 {
   "send": [
     { "type": "image", "path": "/absolute/path/chart.png" },
@@ -168,7 +170,7 @@ The IkunCoding provider also exposes `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.
 Service state and the default Codex workspace share this directory:
 
 ```text
-~/.codex-weixin/
+~/.wemo/
   accounts/                 One credential file per WeChat account
   retained-accounts.json    Recovery index for removed accounts; never stores tokens
   runtime/<account-id>/     Sender authorization and managed sessions
@@ -184,9 +186,9 @@ Do not commit or share this directory. The management API never returns WeChat t
 The server always binds to `127.0.0.1`. Environment variables can change its port and state directory or disable automatic browser opening:
 
 ```text
-CODEX_WEIXIN_PORT=8787
-CODEX_WEIXIN_STATE_DIR=/absolute/private/path
-CODEX_WEIXIN_OPEN=0
+WEMO_PORT=18788
+WEMO_STATE_DIR=/absolute/private/path
+WEMO_OPEN=0
 ```
 
 ## Security model
@@ -211,6 +213,8 @@ npm run build
 
 The project is a clean-room independent implementation under the MIT License. Its iLink integration shape references `Tencent/openclaw-weixin`, along with public Codex/WeChat projects for app-server, media-transfer, and security-boundary practices. No AGPL source code was copied.
 
-When started from a source checkout with `npm run dev` or `npm start`, the Web page checks for updates but does not install them; update the Git checkout and rebuild instead. Global installations and isolated `node_modules/codex-weixin` runtimes update the npm prefix that owns the active package and verify the target version and service entry before restarting. On Windows, the updater first releases any process working-directory lock inside the package tree so npm can replace it without `EBUSY`.
+Wemo is not yet published to an npm update channel. Update the Git checkout and rebuild; do not rely on Web auto-install until a package release is announced.
+
+Wemo is based on the MIT-licensed [`XavierJiezou/codex-weixin`](https://github.com/XavierJiezou/codex-weixin) `v0.3.8` (`769f4a1`). It preserves the upstream history, license, and copyright notice.
 
 See [CHANGELOG.md](./CHANGELOG.md) for release history.

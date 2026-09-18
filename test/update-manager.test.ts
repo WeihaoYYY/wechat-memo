@@ -77,8 +77,8 @@ test("uses the first valid registry and installs from that same registry", async
   assert.deepEqual(await manager.installLatest(), { version: "1.2.4", registry: "npmmirror" });
   assert.deepEqual(installed, [{ version: "1.2.4", registry: "npmmirror" }]);
   assert.deepEqual(requested.sort(), [
-    "https://registry.npmjs.org/codex-weixin/latest",
-    "https://registry.npmmirror.com/codex-weixin/latest"
+    "https://registry.npmjs.org/wechat-memo/latest",
+    "https://registry.npmmirror.com/wechat-memo/latest"
   ].sort());
 });
 
@@ -155,17 +155,17 @@ test("builds fixed cross-platform npm install commands", () => {
     nodePath: "/node"
   }), {
     command: "npm",
-    args: ["install", "--global", "--prefix", "/opt/homebrew", "--no-save", "--package-lock=false", "codex-weixin@1.2.4", "--registry=https://registry.npmmirror.com", "--no-audit", "--no-fund"]
+    args: ["install", "--global", "--prefix", "/opt/homebrew", "--no-save", "--package-lock=false", "wechat-memo@1.2.4", "--registry=https://registry.npmmirror.com", "--no-audit", "--no-fund"]
   });
   assert.deepEqual(buildNpmInstallCommand("1.2.4", "official", {
-    installPrefix: "/Users/tester/codex-weixin-runtime",
+    installPrefix: "/Users/tester/wechat-memo-runtime",
     global: false,
     platform: "darwin",
     env: {},
     nodePath: "/node"
   }), {
     command: "npm",
-    args: ["install", "--prefix", "/Users/tester/codex-weixin-runtime", "--no-save", "--package-lock=false", "codex-weixin@1.2.4", "--registry=https://registry.npmjs.org", "--no-audit", "--no-fund"]
+    args: ["install", "--prefix", "/Users/tester/wechat-memo-runtime", "--no-save", "--package-lock=false", "wechat-memo@1.2.4", "--registry=https://registry.npmjs.org", "--no-audit", "--no-fund"]
   });
   assert.deepEqual(buildNpmInstallCommand("1.2.4", "official", {
     installPrefix: "/opt/homebrew",
@@ -176,27 +176,27 @@ test("builds fixed cross-platform npm install commands", () => {
     npmPath: "/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js"
   }), {
     command: "/opt/homebrew/bin/node",
-    args: ["/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js", "install", "--global", "--prefix", "/opt/homebrew", "--no-save", "--package-lock=false", "codex-weixin@1.2.4", "--registry=https://registry.npmjs.org", "--no-audit", "--no-fund"]
+    args: ["/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js", "install", "--global", "--prefix", "/opt/homebrew", "--no-save", "--package-lock=false", "wechat-memo@1.2.4", "--registry=https://registry.npmjs.org", "--no-audit", "--no-fund"]
   });
   assert.deepEqual(buildNpmInstallCommand("1.2.4", "official", {
-    installPrefix: "C:\\Users\\THU\\codex-weixin-runtime",
+    installPrefix: "C:\\Users\\THU\\wechat-memo-runtime",
     global: true,
     platform: "win32",
     env: { ComSpec: "C:\\Windows\\cmd.exe" },
     nodePath: "C:\\node.exe"
   }), {
     command: "C:\\Windows\\cmd.exe",
-    args: ["/d", "/s", "/c", "npm", "install", "--global", "--prefix", "C:\\Users\\THU\\codex-weixin-runtime", "--no-save", "--package-lock=false", "codex-weixin@1.2.4", "--registry=https://registry.npmjs.org", "--no-audit", "--no-fund"]
+    args: ["/d", "/s", "/c", "npm", "install", "--global", "--prefix", "C:\\Users\\THU\\wechat-memo-runtime", "--no-save", "--package-lock=false", "wechat-memo@1.2.4", "--registry=https://registry.npmjs.org", "--no-audit", "--no-fund"]
   });
   assert.deepEqual(buildNpmInstallCommand("1.2.4", "official", {
-    installPrefix: "C:\\Users\\THU\\codex-weixin-runtime",
+    installPrefix: "C:\\Users\\THU\\wechat-memo-runtime",
     global: true,
     platform: "win32",
     env: { npm_execpath: "C:\\npm\\npm-cli.js" },
     nodePath: "C:\\node.exe"
   }), {
     command: "C:\\node.exe",
-    args: ["C:\\npm\\npm-cli.js", "install", "--global", "--prefix", "C:\\Users\\THU\\codex-weixin-runtime", "--no-save", "--package-lock=false", "codex-weixin@1.2.4", "--registry=https://registry.npmjs.org", "--no-audit", "--no-fund"]
+    args: ["C:\\npm\\npm-cli.js", "install", "--global", "--prefix", "C:\\Users\\THU\\wechat-memo-runtime", "--no-save", "--package-lock=false", "wechat-memo@1.2.4", "--registry=https://registry.npmjs.org", "--no-audit", "--no-fund"]
   });
   assert.throws(
     () => buildNpmInstallCommand("latest", "official", { installPrefix: "/runtime" }),
@@ -212,7 +212,9 @@ test("builds fixed cross-platform npm install commands", () => {
   );
 });
 
-test("finds Homebrew npm-cli outside a background service PATH", (t) => {
+test("finds Homebrew npm-cli outside a background service PATH", {
+  skip: process.platform === "win32"
+}, (t) => {
   const prefix = fs.mkdtempSync(path.join(os.tmpdir(), "codex-weixin-npm-path-"));
   t.after(() => fs.rmSync(prefix, { recursive: true, force: true }));
   const nodeRoot = path.join(prefix, "Cellar", "node", "1.0.0");
@@ -248,7 +250,7 @@ test("prefers the npm CLI bundled beside node.exe on Windows", {
 test("installs through an absolute npm CLI when PATH has no npm", async (t) => {
   const prefix = fs.mkdtempSync(path.join(os.tmpdir(), "codex-weixin-npm-install-"));
   t.after(() => fs.rmSync(prefix, { recursive: true, force: true }));
-  const packageRoot = path.join(prefix, "node_modules", "codex-weixin");
+  const packageRoot = path.join(prefix, "node_modules", "wechat-memo");
   const entryPath = path.join(packageRoot, "dist", "server", "index.js");
   const npmCliPath = path.join(prefix, "fake-npm-cli.mjs");
   fs.mkdirSync(path.dirname(entryPath), { recursive: true });
@@ -259,9 +261,9 @@ test("installs through an absolute npm CLI when PATH has no npm", async (t) => {
     'import path from "node:path";',
     'const args = process.argv.slice(2);',
     'const prefix = args[args.indexOf("--prefix") + 1];',
-    'const spec = args.find((arg) => arg.startsWith("codex-weixin@"));',
-    'const version = spec.slice("codex-weixin@".length);',
-    'const root = path.join(prefix, "node_modules", "codex-weixin");',
+    'const spec = args.find((arg) => arg.startsWith("wechat-memo@"));',
+    'const version = spec.slice("wechat-memo@".length);',
+    'const root = path.join(prefix, "node_modules", "wechat-memo");',
     'fs.mkdirSync(path.join(root, "dist", "server"), { recursive: true });',
     'fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({ version }));',
     'fs.writeFileSync(path.join(root, "dist", "server", "index.js"), "export {};\\n");'
@@ -270,7 +272,7 @@ test("installs through an absolute npm CLI when PATH has no npm", async (t) => {
   const manager = new UpdateManager({
     currentVersion: "1.2.3",
     packageRoot,
-    platform: "darwin",
+    platform: process.platform,
     env: { PATH: "/usr/bin:/bin", npm_execpath: npmCliPath },
     nodePath: process.execPath,
     fetch: async () => new Response(JSON.stringify({ version: "1.2.4" }), { status: 200 })
@@ -282,52 +284,52 @@ test("installs through an absolute npm CLI when PATH has no npm", async (t) => {
 
 test("resolves global and isolated npm install targets on macOS and Windows", () => {
   assert.deepEqual(
-    resolveNpmInstallTarget("/opt/homebrew/lib/node_modules/codex-weixin", "darwin"),
+    resolveNpmInstallTarget("/opt/homebrew/lib/node_modules/wechat-memo", "darwin"),
     {
       installPrefix: "/opt/homebrew",
-      packageRoot: "/opt/homebrew/lib/node_modules/codex-weixin",
+      packageRoot: "/opt/homebrew/lib/node_modules/wechat-memo",
       global: true
     }
   );
   assert.deepEqual(
-    resolveNpmInstallTarget("/Users/tester/codex-weixin-runtime/node_modules/codex-weixin", "darwin"),
+    resolveNpmInstallTarget("/Users/tester/wechat-memo-runtime/node_modules/wechat-memo", "darwin"),
     {
-      installPrefix: "/Users/tester/codex-weixin-runtime",
-      packageRoot: "/Users/tester/codex-weixin-runtime/node_modules/codex-weixin",
+      installPrefix: "/Users/tester/wechat-memo-runtime",
+      packageRoot: "/Users/tester/wechat-memo-runtime/node_modules/wechat-memo",
       global: false
     }
   );
   assert.deepEqual(
-    resolveNpmInstallTarget("C:\\Users\\THU\\AppData\\Roaming\\npm\\node_modules\\codex-weixin", "win32"),
+    resolveNpmInstallTarget("C:\\Users\\THU\\AppData\\Roaming\\npm\\node_modules\\wechat-memo", "win32"),
     {
       installPrefix: "C:\\Users\\THU\\AppData\\Roaming\\npm",
-      packageRoot: "C:\\Users\\THU\\AppData\\Roaming\\npm\\node_modules\\codex-weixin",
+      packageRoot: "C:\\Users\\THU\\AppData\\Roaming\\npm\\node_modules\\wechat-memo",
       global: true
     }
   );
   assert.equal(
-    resolveNpmInstallPrefix("/opt/homebrew/lib/node_modules/codex-weixin", "darwin"),
+    resolveNpmInstallPrefix("/opt/homebrew/lib/node_modules/wechat-memo", "darwin"),
     "/opt/homebrew"
   );
   assert.equal(
-    resolveNpmInstallPrefix("C:\\Users\\THU\\work\\codex-weixin-runtime\\node_modules\\codex-weixin", "win32"),
-    "C:\\Users\\THU\\work\\codex-weixin-runtime"
+    resolveNpmInstallPrefix("C:\\Users\\THU\\work\\wechat-memo-runtime\\node_modules\\wechat-memo", "win32"),
+    "C:\\Users\\THU\\work\\wechat-memo-runtime"
   );
-  assert.equal(resolveNpmInstallPrefix("/workspace/codex-weixin", "darwin"), undefined);
-  assert.equal(resolveNpmInstallTarget("/workspace/codex-weixin", "darwin"), undefined);
+  assert.equal(resolveNpmInstallPrefix("/workspace/wechat-memo", "darwin"), undefined);
+  assert.equal(resolveNpmInstallTarget("/workspace/wechat-memo", "darwin"), undefined);
 });
 
 test("releases a Windows cwd lock only when the service runs inside its package", () => {
   const changedDirectories: string[] = [];
-  assert.equal(releaseRuntimeDirectoryLock("C:\\Users\\THU\\work\\codex-weixin-runtime", {
-    currentWorkingDirectory: "C:\\Users\\THU\\work\\codex-weixin-runtime\\node_modules\\codex-weixin\\dist\\server",
+  assert.equal(releaseRuntimeDirectoryLock("C:\\Users\\THU\\work\\wechat-memo-runtime", {
+    currentWorkingDirectory: "C:\\Users\\THU\\work\\wechat-memo-runtime\\node_modules\\wechat-memo\\dist\\server",
     platform: "win32",
     chdir: (directory) => changedDirectories.push(directory)
   }), true);
-  assert.deepEqual(changedDirectories, ["C:\\Users\\THU\\work\\codex-weixin-runtime"]);
+  assert.deepEqual(changedDirectories, ["C:\\Users\\THU\\work\\wechat-memo-runtime"]);
 
-  assert.equal(releaseRuntimeDirectoryLock("C:\\Users\\THU\\work\\codex-weixin-runtime", {
-    currentWorkingDirectory: "C:\\Users\\THU\\.codex-weixin",
+  assert.equal(releaseRuntimeDirectoryLock("C:\\Users\\THU\\work\\wechat-memo-runtime", {
+    currentWorkingDirectory: "C:\\Users\\THU\\.wemo",
     platform: "win32",
     chdir: (directory) => changedDirectories.push(directory)
   }), false);
@@ -337,8 +339,8 @@ test("releases a Windows cwd lock only when the service runs inside its package"
 test("releases a macOS global package cwd lock using its actual package root", () => {
   const changedDirectories: string[] = [];
   assert.equal(releaseRuntimeDirectoryLock("/opt/homebrew", {
-    packageRoot: "/opt/homebrew/lib/node_modules/codex-weixin",
-    currentWorkingDirectory: "/opt/homebrew/lib/node_modules/codex-weixin/dist/server",
+    packageRoot: "/opt/homebrew/lib/node_modules/wechat-memo",
+    currentWorkingDirectory: "/opt/homebrew/lib/node_modules/wechat-memo/dist/server",
     platform: "darwin",
     chdir: (directory) => changedDirectories.push(directory)
   }), true);
@@ -361,7 +363,7 @@ test("converts unsigned Windows npm exit codes back to signed libuv errors", () 
 test("rejects Web installation when running from a source checkout", async () => {
   const manager = new UpdateManager({
     currentVersion: "1.2.3",
-    packageRoot: "/workspace/codex-weixin",
+    packageRoot: "/workspace/wechat-memo",
     platform: "darwin",
     fetch: async () => new Response(JSON.stringify({ version: "1.2.4" }), { status: 200 })
   });

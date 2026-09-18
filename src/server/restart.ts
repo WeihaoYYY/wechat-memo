@@ -28,16 +28,16 @@ export function launchRestartHelper(options: RestartHelperOptions): void {
     detached: true,
     env: {
       ...process.env,
-      CODEX_WEIXIN_OPEN: "0",
-      CODEX_WEIXIN_PORT: String(options.port),
-      CODEX_WEIXIN_STATE_DIR: options.stateDir
+      WEMO_OPEN: "0",
+      WEMO_PORT: String(options.port),
+      WEMO_STATE_DIR: options.stateDir
     },
     shell: false,
     stdio: "ignore",
     windowsHide: true
   });
   child.once("error", (error) => {
-    console.error(`[codex-weixin] unable to launch restart helper: ${error.message}`);
+    console.error(`[wemo] unable to launch restart helper: ${error.message}`);
   });
   child.unref();
 }

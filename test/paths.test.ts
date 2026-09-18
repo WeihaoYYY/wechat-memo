@@ -5,8 +5,8 @@ import test from "node:test";
 
 import { accountStatePaths, defaultStateDir, resolveStatePaths } from "../src/state/paths.js";
 
-test("uses ~/.codex-weixin for service state", () => {
-  assert.equal(defaultStateDir(), path.join(os.homedir(), ".codex-weixin"));
+test("uses ~/.wemo for service state", () => {
+  assert.equal(defaultStateDir(), path.join(os.homedir(), ".wemo"));
 });
 
 test("isolates runtime state and inbound media by account", () => {

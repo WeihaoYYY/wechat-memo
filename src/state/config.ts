@@ -23,7 +23,7 @@ export type CodexWeixinConfig = {
   maxInboundBytes: number;
 };
 
-export function defaultConfig(cwd = path.join(os.homedir(), ".codex-weixin")): CodexWeixinConfig {
+export function defaultConfig(cwd = path.join(os.homedir(), ".wemo", "workspace")): CodexWeixinConfig {
   return {
     defaultCwd: path.resolve(cwd),
     allowedSenderIds: [],

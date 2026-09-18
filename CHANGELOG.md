@@ -1,6 +1,26 @@
 # Changelog
 
-All notable changes to `codex-weixin` are documented in this file.
+All notable changes to `wechat-memo` are documented in this file. The `0.3.x` and older entries below are retained upstream history from `codex-weixin`.
+
+## [0.1.0] - 2026-09-18
+
+### Added
+
+- Established Wemo from the clean upstream `codex-weixin v0.3.8` commit `769f4a1ae5370f46f8962ee7fe45d6764b67bdd8`.
+- Added standalone `wemo` and `wechat-memo` commands, product identity, architecture boundaries, and upstream provenance documentation.
+- Added isolated defaults: local port `18788`, state under `~/.wemo`, and workspace under `~/.wemo/workspace`.
+- Added `WEMO_PORT`, `WEMO_STATE_DIR`, and `WEMO_OPEN` runtime variables and an independent Web mutation token header.
+
+### Changed
+
+- Renamed the native outbound action block to `wemo-actions` while retaining parser compatibility with older action blocks.
+- Pointed update metadata and repository links at the standalone `wechat-memo` project.
+- Corrected simulated macOS PATH resolution so platform-specific tests do not use the host operating system's path separator.
+
+### Security
+
+- Excluded all previous customized runtime state, Trading Project code, Route V3 experiments, credentials, and deployment scripts from this clean fork.
+- Kept the Web server bound to `127.0.0.1` and separated Wemo state, port, process lock, and request token from the earlier local deployment.
 
 ## [0.3.8] - 2026-07-20
 
