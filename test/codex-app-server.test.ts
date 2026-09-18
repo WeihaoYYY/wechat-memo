@@ -118,6 +118,31 @@ test("interrupts the active V2 turn with both threadId and turnId", async (t) =>
   assert.match(result.error?.message ?? "", /interrupted/i);
 });
 
+test("auto backend does not launch the exec fallback after an intentional interrupt", async (t) => {
+  const runner = new HybridCodexRunner({
+    backend: "auto",
+    codexBin: path.join(fixturesDir, "fake-codex-app-server.mjs"),
+    timeoutMs: 2_000
+  });
+  t.after(() => runner.close());
+
+  const run = runner.run({ prompt: "hold", cwd: "/tmp/project", threadId: "thread-hybrid-stop" });
+  const outcome = run.then(
+    (value) => ({ value, error: undefined }),
+    (error: Error) => ({ value: undefined, error })
+  );
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    await runner.stop("thread-hybrid-stop");
+  }
+  const result = await outcome;
+  assert.match(result.error?.message ?? "", /interrupted/i);
+  assert.equal(await runner.resetAfterInterruptIfIdle(), true);
+
+  const next = await runner.run({ prompt: "after-stop", cwd: "/tmp/project", threadId: "thread-hybrid-stop" });
+  assert.equal(next.text, "reply:after-stop");
+});
+
 test("auto backend falls back to codex exec for an existing thread", async (t) => {
   const runner = new HybridCodexRunner({
     backend: "auto",

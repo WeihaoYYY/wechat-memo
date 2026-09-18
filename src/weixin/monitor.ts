@@ -39,6 +39,7 @@ export async function monitorWeixin(options: MonitorOptions): Promise<void> {
   let syncKey = options.initialSyncKey;
   const pollIntervalMs = options.pollIntervalMs ?? 1000;
   const retryBackoff = new PollRetryBackoff(pollIntervalMs, options.maxPollRetryMs ?? 30_000);
+  const inFlight = new Set<Promise<void>>();
   while (!options.signal?.aborted) {
     let batch: { syncKey?: string; messages: WeixinRawMessage[] };
     try {
@@ -73,21 +74,28 @@ export async function monitorWeixin(options: MonitorOptions): Promise<void> {
         console.log(`[wemo] skipped duplicate message ${normalized.id} from ${normalized.senderId}`);
         continue;
       }
-      try {
-        console.log(`[wemo] handling message ${normalized.id} from ${normalized.senderId}`);
-        await options.onMessage(normalized);
-        console.log(`[wemo] handled message ${normalized.id} from ${normalized.senderId}`);
-      } catch (error) {
-        console.error(`[wemo] message handling failed for ${normalized.senderId}: ${errorDetail(error)}`);
-        try {
-          await options.onMessageError?.(error, normalized);
-        } catch (reportError) {
-          console.error(`[wemo] failed to report message error for ${normalized.senderId}: ${errorDetail(reportError)}`);
-        }
-      }
+      const task = handleMessage(options, normalized);
+      inFlight.add(task);
+      void task.finally(() => inFlight.delete(task));
     }
     if (!messages.length) {
       await delay(pollIntervalMs, options.signal);
+    }
+  }
+  await Promise.allSettled(inFlight);
+}
+
+async function handleMessage(options: MonitorOptions, message: NormalizedWeixinMessage): Promise<void> {
+  try {
+    console.log(`[wemo] handling message ${message.id} from ${message.senderId}`);
+    await options.onMessage(message);
+    console.log(`[wemo] handled message ${message.id} from ${message.senderId}`);
+  } catch (error) {
+    console.error(`[wemo] message handling failed for ${message.senderId}: ${errorDetail(error)}`);
+    try {
+      await options.onMessageError?.(error, message);
+    } catch (reportError) {
+      console.error(`[wemo] failed to report message error for ${message.senderId}: ${errorDetail(reportError)}`);
     }
   }
 }

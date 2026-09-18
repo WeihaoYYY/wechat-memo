@@ -117,6 +117,49 @@ test("continues with the remaining batch after one message fails", async (t) => 
   assert.deepEqual(failures, ["first:message failed"]);
 });
 
+test("keeps polling so a stop message can arrive while another handler is running", async (t) => {
+  t.mock.method(console, "log", () => {});
+  const controller = new AbortController();
+  let releaseFirst!: () => void;
+  const firstGate = new Promise<void>((resolve) => {
+    releaseFirst = resolve;
+  });
+  const handled: string[] = [];
+  let polls = 0;
+  const client = {
+    async getUpdates() {
+      polls += 1;
+      if (polls === 1) {
+        return { msgs: [{ message_id: "long", from_user_id: "alice", text: "long task" }] };
+      }
+      if (polls === 2) {
+        return { msgs: [{ message_id: "stop", from_user_id: "alice", text: "/stop" }] };
+      }
+      return { msgs: [] };
+    }
+  } as WeixinApiClient;
+
+  await monitorWeixin({
+    client,
+    signal: controller.signal,
+    pollIntervalMs: 0,
+    async onMessage(message) {
+      handled.push(`start:${message.id}`);
+      if (message.id === "long") {
+        await firstGate;
+      } else {
+        releaseFirst();
+        controller.abort();
+      }
+      handled.push(`finish:${message.id}`);
+    }
+  });
+
+  assert.deepEqual(handled.slice(0, 2), ["start:long", "start:stop"]);
+  assert.ok(handled.includes("finish:long"));
+  assert.ok(handled.includes("finish:stop"));
+});
+
 test("skips duplicate message ids and persists the latest sync key", async (t) => {
   t.mock.method(console, "log", () => {});
   const controller = new AbortController();

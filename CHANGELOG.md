@@ -16,6 +16,9 @@ All notable changes to `wechat-memo` are documented in this file. The `0.3.x` an
 - Renamed the native outbound action block to `wemo-actions` while retaining parser compatibility with older action blocks.
 - Pointed update metadata and repository links at the standalone `wechat-memo` project.
 - Corrected simulated macOS PATH resolution so platform-specific tests do not use the host operating system's path separator.
+- Marked WeChat-provided voice transcriptions in Codex prompts so they are not mistaken for keyboard text.
+- Kept `/stop` responsive during active Codex turns and safely rejected overlapping ordinary tasks from the same sender.
+- Reset the idle App Server process tree after an interrupt so Windows command children do not continue running in the background.
 
 ### Security
 

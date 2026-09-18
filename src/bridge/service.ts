@@ -28,6 +28,8 @@ export class BridgeService {
   private readonly access: AccessController;
   private readonly buffers: PromptBuffer;
   private readonly runner: HybridCodexRunner;
+  private readonly activeTasks = new Map<string, Promise<void>>();
+  private readonly stopRequested = new Set<string>();
 
   constructor(private readonly options: BridgeServiceOptions) {
     this.access = new AccessController({
@@ -59,6 +61,42 @@ export class BridgeService {
     this.options.stateStore.ensureActiveSession(message.senderId, this.options.config.defaultCwd);
 
     const command = parseCommand(message.text);
+    if (command?.name === "stop") {
+      await this.handleStopCommand(message.senderId);
+      return;
+    }
+    if (command?.name === "status" || command?.name === "where") {
+      await this.handleCommand(message, command);
+      return;
+    }
+
+    if (this.activeTasks.has(message.senderId)) {
+      await this.reply(message.senderId, "上一项任务仍在运行。发送 /stop 可停止；任务结束后再发送下一项任务。");
+      return;
+    }
+
+    const task = this.processMessage(message, command);
+    this.activeTasks.set(message.senderId, task);
+    try {
+      await task;
+    } catch (error) {
+      if (this.stopRequested.has(message.senderId)) {
+        console.log(`[wemo] Codex task stopped for ${message.senderId}`);
+        return;
+      }
+      throw error;
+    } finally {
+      if (this.activeTasks.get(message.senderId) === task) {
+        this.activeTasks.delete(message.senderId);
+      }
+      this.stopRequested.delete(message.senderId);
+    }
+  }
+
+  private async processMessage(
+    message: NormalizedWeixinMessage,
+    command: { name: string; arg: string } | undefined
+  ): Promise<void> {
     if (command) {
       await this.handleCommand(message, command);
       return;
@@ -111,11 +149,28 @@ export class BridgeService {
         await this.handlePromptCommand(message.senderId, command.arg);
         return;
       case "stop":
-        await this.runner.stop(this.options.stateStore.getThread(message.senderId));
-        await this.reply(message.senderId, "Stop signal sent.");
+        await this.handleStopCommand(message.senderId);
         return;
       default:
         await this.reply(message.senderId, `Unknown command: /${command.name}. Send /help.`);
+    }
+  }
+
+  private async handleStopCommand(senderId: string): Promise<void> {
+    const activeTask = this.activeTasks.get(senderId);
+    if (!activeTask) {
+      await this.reply(senderId, "当前没有正在运行的任务。");
+      return;
+    }
+    this.stopRequested.add(senderId);
+    try {
+      await this.runner.stop(this.options.stateStore.getThread(senderId));
+      await Promise.race([activeTask.catch(() => undefined), delay(2_000)]);
+      await this.runner.resetAfterInterruptIfIdle();
+      await this.reply(senderId, "停止信号已发送，正在结束当前任务。");
+    } catch (error) {
+      this.stopRequested.delete(senderId);
+      throw error;
     }
   }
 
@@ -320,7 +375,12 @@ export class BridgeService {
   private async promptItemsFromMessage(message: NormalizedWeixinMessage): Promise<PromptBufferItem[]> {
     const items: PromptBufferItem[] = [];
     if (message.text.trim()) {
-      items.push({ kind: "text", text: message.text });
+      items.push({
+        kind: "text",
+        text: message.voiceTranscription
+          ? `[WeChat voice transcription]\n${message.text}`
+          : message.text
+      });
     }
     const attachments = message.attachments ?? [];
     if (!attachments.length) {
@@ -461,6 +521,7 @@ export class BridgeService {
       `session: ${session?.title ?? "(new)"}`,
       `workspace: ${workspace}`,
       `thread: ${session?.threadId || "(new)"}`,
+      `task: ${this.activeTasks.has(senderId) ? "running" : "idle"}`,
       `backend: ${this.options.config.codexBackend}`,
       `exec sandbox: ${this.options.config.codexExecSandbox ?? "(Codex default)"}`,
       `model: ${runtime.model ?? "(Codex default)"}`,
@@ -522,6 +583,25 @@ export class BridgeService {
   listAllowedSenders(): string[] {
     return this.access.listPairedSenderIds();
   }
+
+  async shutdown(): Promise<void> {
+    const senderIds = [...this.activeTasks.keys()];
+    for (const senderId of senderIds) {
+      this.stopRequested.add(senderId);
+    }
+    await Promise.allSettled(senderIds.map((senderId) => (
+      this.runner.stop(this.options.stateStore.getThread(senderId))
+    )));
+    await Promise.race([
+      Promise.allSettled([...this.activeTasks.values()]),
+      delay(2_000)
+    ]);
+    await this.runner.resetAfterInterruptIfIdle();
+  }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function parseCommand(text: string): { name: string; arg: string } | undefined {

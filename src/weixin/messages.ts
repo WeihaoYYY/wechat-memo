@@ -18,6 +18,7 @@ export type NormalizedWeixinMessage = {
   senderId: string;
   contextToken?: string;
   text: string;
+  voiceTranscription?: boolean;
   attachments: WeixinInboundAttachment[];
   raw: WeixinRawMessage;
 };
@@ -28,6 +29,7 @@ export function normalizeWeixinMessage(raw: WeixinRawMessage): NormalizedWeixinM
     return undefined;
   }
   const textParts: string[] = [];
+  let voiceTranscription = false;
   if (typeof raw.text === "string") {
     textParts.push(raw.text);
   }
@@ -35,6 +37,9 @@ export function normalizeWeixinMessage(raw: WeixinRawMessage): NormalizedWeixinM
     const text = extractTextItem(item);
     if (text) {
       textParts.push(text);
+      if (extractVoiceTranscription(item.voice_item)) {
+        voiceTranscription = true;
+      }
     }
   }
   const attachments = extractAttachments(raw.item_list ?? []);
@@ -43,6 +48,7 @@ export function normalizeWeixinMessage(raw: WeixinRawMessage): NormalizedWeixinM
     senderId,
     contextToken: raw.context_token,
     text: textParts.join("\n").trim(),
+    voiceTranscription,
     attachments,
     raw
   };

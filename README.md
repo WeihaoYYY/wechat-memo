@@ -44,7 +44,7 @@
 
 ### 2. 微信原生语音指令
 
-支持微信语音转写，可以直接用语音向 Codex 下达任务；没有转写文本的语音会作为本机附件交给 Codex 处理。
+支持微信语音转写，可以直接用语音向 Codex 下达任务；转写文本会明确标记为微信语音转写，没有转写文本的语音会作为本机附件交给 Codex 处理。
 
 <p align="center">
   <img src="docs/images/screenshots/wechat-voice-command.png" alt="通过微信语音向 Codex 下达指令" width="420" />
@@ -52,7 +52,7 @@
 
 ### 3. Codex CLI 原生命令
 
-微信端支持 `/status`、`/new`、`/resume`、`/bind`、`/model`、`/effort`、`/stream`、`/prompt start`、`/prompt done` 和 `/stop`，可以管理会话、工作目录、模型、推理强度和过程进度。
+微信端支持 `/status`、`/new`、`/resume`、`/bind`、`/model`、`/effort`、`/stream`、`/prompt start`、`/prompt done` 和 `/stop`，可以管理会话、工作目录、模型、推理强度和过程进度。长任务执行期间仍可发送 `/stop` 中断；同一联系人不会意外并发启动两项普通任务。Windows 上中断完成后会在没有其他活跃 turn 时重置 App Server 进程树，避免命令子进程留在后台。
 
 <p align="center">
   <img src="docs/images/screenshots/wechat-cli-commands.png" alt="在微信中使用 Codex CLI 原生命令" width="420" />

@@ -23,6 +23,7 @@ test("normalizes inbound image items as attachments", () => {
   });
 
   assert.equal(message?.text, "describe this");
+  assert.equal(message?.voiceTranscription, false);
   assert.deepEqual(message?.attachments, [{
     kind: "image",
     label: "image",
@@ -79,6 +80,7 @@ test("normalizes inbound voice transcription without audio attachment", () => {
   });
 
   assert.equal(message?.text, "voice transcript");
+  assert.equal(message?.voiceTranscription, true);
   assert.deepEqual(message?.attachments.map((attachment) => ({
     kind: attachment.kind,
     label: attachment.label
@@ -98,6 +100,7 @@ test("normalizes inbound voice media as audio when transcription is unavailable"
   });
 
   assert.equal(message?.text, "");
+  assert.equal(message?.voiceTranscription, false);
   assert.deepEqual(message?.attachments.map((attachment) => ({
     kind: attachment.kind,
     label: attachment.label

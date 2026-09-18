@@ -8,6 +8,13 @@ export type AppServerRunnerOptions = {
   requestTimeoutMs?: number;
 };
 
+export class CodexTurnInterruptedError extends Error {
+  constructor() {
+    super("Codex app-server turn was interrupted");
+    this.name = "CodexTurnInterruptedError";
+  }
+}
+
 export type CodexRunnerInput = {
   prompt: string;
   cwd: string;
@@ -235,6 +242,19 @@ export class AppServerCodexRunner {
     }
 
     await this.request("turn/interrupt", target);
+  }
+
+  async resetAfterInterruptIfIdle(): Promise<boolean> {
+    if (this.activeTurns.size > 0) {
+      return false;
+    }
+    const child = this.child;
+    if (!child || child.exitCode !== null) {
+      return true;
+    }
+    this.failTransport(new Error("Codex app-server reset after interrupted turn"), false);
+    await terminateProcessTree(child);
+    return true;
   }
 
   close(): void {
@@ -495,7 +515,7 @@ export class AppServerCodexRunner {
       return;
     }
     if (completion.status === "interrupted") {
-      reject(new Error("Codex app-server turn was interrupted"));
+      reject(new CodexTurnInterruptedError());
       return;
     }
     reject(new Error(completion.error ?? `Codex app-server turn ended with status ${completion.status}`));
@@ -602,6 +622,26 @@ export class AppServerCodexRunner {
     this.runtimeInfoByThread.clear();
     this.modelOptions = undefined;
   }
+}
+
+async function terminateProcessTree(child: ChildProcessWithoutNullStreams): Promise<void> {
+  if (child.exitCode !== null) return;
+  if (process.platform !== "win32" || child.pid === undefined) {
+    child.kill();
+    return;
+  }
+  await new Promise<void>((resolve) => {
+    const killer = spawn("taskkill", ["/pid", String(child.pid), "/t", "/f"], {
+      stdio: "ignore",
+      shell: false,
+      windowsHide: true
+    });
+    killer.once("error", () => {
+      child.kill();
+      resolve();
+    });
+    killer.once("exit", () => resolve());
+  });
 }
 
 function turnKeyFromParams(params: Record<string, unknown>): string | undefined {

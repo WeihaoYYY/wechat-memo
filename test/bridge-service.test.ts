@@ -13,6 +13,48 @@ import { RuntimeStateStore } from "../src/state/runtime-state.js";
 import { encryptAesEcb } from "../src/weixin/media.js";
 import { normalizeWeixinMessage } from "../src/weixin/messages.js";
 
+test("labels WeChat voice transcriptions in the Codex prompt", async (t) => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wemo-voice-transcription-"));
+  t.after(() => fs.rmSync(tmpDir, { recursive: true, force: true }));
+  const stateStore = new RuntimeStateStore(resolveStatePaths(path.join(tmpDir, "state")));
+  let receivedPrompt = "";
+  const service = new BridgeService({
+    config: {
+      ...defaultConfig(tmpDir),
+      allowedSenderIds: ["alice@im.wechat"]
+    },
+    stateStore,
+    weixin: {
+      async sendTyping() {},
+      async sendText() {
+        return { messageId: "text-message" };
+      }
+    } as never,
+    runner: {
+      async run(input: { prompt: string }) {
+        receivedPrompt = input.prompt;
+        return { raw: "", text: "收到语音转写" };
+      },
+      async stop() {}
+    } as never
+  });
+  const message = normalizeWeixinMessage({
+    message_id: "voice-message",
+    from_user_id: "alice@im.wechat",
+    item_list: [{
+      type: 3,
+      voice_item: {
+        text: "语音测试123",
+        media: { encrypt_query_param: "voice-token", aes_key: "voice-key" }
+      }
+    }]
+  });
+
+  assert.ok(message);
+  await service.handleMessage(message);
+  assert.match(receivedPrompt, /\[WeChat voice transcription\]\n语音测试123/);
+});
+
 test("reports WeChat Codex turn status and resolves runtime details for status", async (t) => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "codex-weixin-status-"));
   t.after(() => fs.rmSync(tmpDir, { recursive: true, force: true }));
@@ -67,6 +109,81 @@ test("reports WeChat Codex turn status and resolves runtime details for status",
   });
   assert.match(replies.at(-1) ?? "", /model: gpt-test/);
   assert.match(replies.at(-1) ?? "", /effort: high/);
+});
+
+test("accepts stop while a task is running and rejects overlapping ordinary messages", async (t) => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wemo-concurrent-stop-"));
+  t.after(() => fs.rmSync(tmpDir, { recursive: true, force: true }));
+  const stateStore = new RuntimeStateStore(resolveStatePaths(path.join(tmpDir, "state")));
+  const replies: string[] = [];
+  let rejectRun!: (error: Error) => void;
+  let markStarted!: () => void;
+  const started = new Promise<void>((resolve) => {
+    markStarted = resolve;
+  });
+  const pendingRun = new Promise<never>((_resolve, reject) => {
+    rejectRun = reject;
+  });
+  let runCount = 0;
+  let stopCount = 0;
+  let resetCount = 0;
+  const service = new BridgeService({
+    config: {
+      ...defaultConfig(tmpDir),
+      allowedSenderIds: ["alice@im.wechat"]
+    },
+    stateStore,
+    weixin: {
+      async sendTyping() {},
+      async sendText(input: { text: string }) {
+        replies.push(input.text);
+        return { messageId: "text-message" };
+      }
+    } as never,
+    runner: {
+      async run() {
+        runCount += 1;
+        markStarted();
+        return pendingRun;
+      },
+      async stop() {
+        stopCount += 1;
+        rejectRun(new Error("Codex turn interrupted by test"));
+      },
+      async resetAfterInterruptIfIdle() {
+        resetCount += 1;
+        return true;
+      }
+    } as never
+  });
+
+  const running = service.handleMessage({
+    id: "long-task",
+    senderId: "alice@im.wechat",
+    text: "执行长任务",
+    raw: {}
+  });
+  await started;
+
+  await service.handleMessage({
+    id: "overlap",
+    senderId: "alice@im.wechat",
+    text: "再执行一项任务",
+    raw: {}
+  });
+  await service.handleMessage({
+    id: "stop",
+    senderId: "alice@im.wechat",
+    text: "/stop",
+    raw: {}
+  });
+  await running;
+
+  assert.equal(runCount, 1);
+  assert.equal(stopCount, 1);
+  assert.equal(resetCount, 1);
+  assert.ok(replies.some((reply) => /上一项任务仍在运行/.test(reply)));
+  assert.ok(replies.some((reply) => /停止信号已发送/.test(reply)));
 });
 
 test("sends local markdown images as native WeChat image messages", async (t) => {

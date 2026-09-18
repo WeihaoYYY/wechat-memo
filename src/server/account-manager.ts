@@ -205,6 +205,7 @@ export class AccountManager {
     const entry = this.entries.get(account.accountId);
     if (entry) {
       entry.controller?.abort();
+      await entry.service?.shutdown();
       await entry.task;
       entry.status = "stopped";
     }

@@ -1,5 +1,6 @@
 import {
   AppServerCodexRunner,
+  CodexTurnInterruptedError,
   type CodexHistoryMessage,
   type CodexModelOption,
   type CodexRunnerInput,
@@ -41,6 +42,9 @@ export class HybridCodexRunner {
     try {
       return await this.appServer.run(input);
     } catch (error) {
+      if (error instanceof CodexTurnInterruptedError) {
+        throw error;
+      }
       if (this.options.backend === "app-server") {
         throw error;
       }
@@ -61,6 +65,10 @@ export class HybridCodexRunner {
       this.appServer.stop(threadId),
       this.exec.stop(threadId)
     ]);
+  }
+
+  async resetAfterInterruptIfIdle(): Promise<boolean> {
+    return this.appServer.resetAfterInterruptIfIdle();
   }
 
   async getHistory(threadId: string): Promise<CodexHistoryMessage[]> {
